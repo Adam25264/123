@@ -1,0 +1,2225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFlame - Gas Delivery</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --primary-green: #00C853;
+            --dark-green: #00B248;
+            --light-green: #5EFC82;
+            --background-green: #E8F5E9;
+            --text-dark: #1E3A34;
+            --text-light: #4A665E;
+            --card-bg: #FFFFFF;
+            --border-color: #C8E6C9;
+        }
+        
+        body {
+            background-color: #ffffff;
+            color: var(--text-dark);
+            max-width: 500px;
+            margin: 0 auto;
+            min-height: 100vh;
+            box-shadow: 0 0 40px rgba(0,200,83,0.08);
+            position: relative;
+            overflow-x: hidden;
+            user-select: none;
+        }
+        
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        .loading-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            animation: pulse 2s infinite;
+        }
+        
+        .loading-logo i {
+            font-size: 42px;
+            color: white;
+        }
+        
+        .loading-logo span {
+            font-size: 36px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: 1px;
+        }
+        
+        .loading-bar {
+            width: 200px;
+            height: 4px;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        
+        .loading-progress {
+            height: 100%;
+            background-color: white;
+            width: 0%;
+            border-radius: 2px;
+            animation: loading 2s ease-in-out forwards;
+        }
+        
+        /* App Header */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+            color: white;
+            padding: 20px 18px 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,200,83,0.15);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .app-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        
+        .logo-icon {
+            font-size: 24px;
+            animation: flame 3s infinite alternate;
+        }
+        
+        .header-icons {
+            display: flex;
+            gap: 22px;
+            font-size: 19px;
+        }
+        
+        .header-icons i {
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+        
+        .header-icons i:active {
+            transform: scale(0.9);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #FF5252;
+            color: white;
+            font-size: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .location-selector {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 15px;
+            background-color: rgba(255,255,255,0.15);
+            border-radius: 14px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .location-selector:active {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .location-selector i {
+            color: rgba(255,255,255,0.8);
+        }
+        
+        /* Main App Content */
+        .app-content {
+            padding: 18px;
+            padding-bottom: 90px;
+        }
+        
+        .section-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .see-all {
+            font-size: 14px;
+            color: var(--primary-green);
+            font-weight: 600;
+        }
+        
+        /* Promo Banner */
+        .promo-banner {
+            background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 25px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .promo-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .promo-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        
+        .promo-text {
+            font-size: 14px;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 18px;
+            max-width: 70%;
+        }
+        
+        .promo-button {
+            background-color: white;
+            color: var(--primary-green);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .promo-button:active {
+            transform: scale(0.95);
+        }
+        
+        .promo-decoration {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 80px;
+            opacity: 0.2;
+            z-index: 1;
+        }
+        
+        /* Order Card */
+        .order-card {
+            background-color: var(--card-bg);
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 25px;
+            box-shadow: 0 6px 20px rgba(0,200,83,0.08);
+            border: 1px solid var(--border-color);
+        }
+        
+        .order-card-title {
+            font-size: 19px;
+            font-weight: 800;
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-dark);
+        }
+        
+        .order-card-title i {
+            color: var(--primary-green);
+        }
+        
+        /* Gas Types */
+        .gas-types {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .gas-type {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px 14px;
+            text-align: center;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .gas-type.active {
+            border-color: var(--primary-green);
+            background-color: var(--background-green);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,200,83,0.1);
+        }
+        
+        .gas-type:active {
+            transform: scale(0.98);
+        }
+        
+        .gas-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            color: var(--primary-green);
+        }
+        
+        .gas-name {
+            font-weight: 800;
+            font-size: 16px;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+        }
+        
+        .gas-desc {
+            font-size: 13px;
+            color: var(--text-light);
+            line-height: 1.4;
+        }
+        
+        .gas-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--primary-green);
+            color: white;
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+        
+        /* Cylinder Sizes */
+        .cylinder-sizes {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 12px;
+        }
+        
+        .cylinder-size {
+            flex: 1;
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .cylinder-size.active {
+            border-color: var(--primary-green);
+            background-color: var(--background-green);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,200,83,0.08);
+        }
+        
+        .cylinder-size:active {
+            transform: scale(0.98);
+        }
+        
+        .cylinder-size-value {
+            font-weight: 900;
+            font-size: 20px;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+        }
+        
+        .cylinder-size-label {
+            font-size: 14px;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+        
+        .cylinder-price {
+            font-weight: 800;
+            font-size: 16px;
+            margin-top: 10px;
+            color: var(--primary-green);
+        }
+        
+        /* Delivery Options */
+        .delivery-options {
+            margin-bottom: 20px;
+        }
+        
+        .delivery-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .delivery-option.active {
+            border-color: var(--primary-green);
+            background-color: var(--background-green);
+            transform: translateY(-2px);
+        }
+        
+        .delivery-option:active {
+            transform: scale(0.99);
+        }
+        
+        .delivery-info {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        
+        .delivery-icon {
+            font-size: 22px;
+            color: var(--primary-green);
+        }
+        
+        .delivery-text h4 {
+            font-weight: 800;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+            font-size: 16px;
+        }
+        
+        .delivery-text p {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+        
+        .delivery-time {
+            font-weight: 800;
+            color: var(--primary-green);
+            font-size: 16px;
+        }
+        
+        /* Order Summary */
+        .order-summary {
+            background-color: var(--background-green);
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .summary-title {
+            font-size: 19px;
+            font-weight: 800;
+            margin-bottom: 18px;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .summary-item:last-child {
+            border-bottom: none;
+            font-weight: 800;
+            font-size: 18px;
+        }
+        
+        .summary-label {
+            color: var(--text-light);
+        }
+        
+        .summary-value {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        /* Order Button */
+        .order-button {
+            background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 20px;
+            font-size: 18px;
+            font-weight: 800;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+            transition: all 0.2s;
+            box-shadow: 0 8px 25px rgba(0,200,83,0.3);
+            letter-spacing: 0.5px;
+        }
+        
+        .order-button:active {
+            transform: scale(0.98);
+            background: linear-gradient(135deg, var(--dark-green), #009933);
+        }
+        
+        .order-button.loading {
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: white;
+            border-top: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            z-index: 100;
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.08);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 12px;
+            transition: all 0.2s;
+            padding: 10px 15px;
+            border-radius: 14px;
+            position: relative;
+        }
+        
+        .nav-item.active {
+            color: var(--primary-green);
+            background-color: var(--background-green);
+            font-weight: 700;
+        }
+        
+        .nav-icon {
+            font-size: 22px;
+        }
+        
+        /* Screens */
+        .screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: white;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        .screen-header {
+            background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+            color: white;
+            padding: 22px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .screen-title {
+            font-size: 22px;
+            font-weight: 800;
+        }
+        
+        .close-screen {
+            font-size: 28px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        
+        .close-screen:active {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        /* Driver Tracking */
+        .driver-card {
+            background-color: var(--background-green);
+            border-radius: 18px;
+            padding: 22px;
+            margin: 20px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .driver-avatar {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            font-weight: 800;
+        }
+        
+        .driver-details h3 {
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-size: 20px;
+        }
+        
+        .driver-details p {
+            color: var(--text-light);
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+        
+        .driver-rating {
+            color: var(--text-dark);
+            font-weight: 800;
+            font-size: 15px;
+        }
+        
+        .driver-contact {
+            display: flex;
+            gap: 15px;
+            margin-left: auto;
+        }
+        
+        .contact-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+            color: var(--primary-green);
+        }
+        
+        .contact-btn:active {
+            transform: scale(0.9);
+            background-color: var(--background-green);
+        }
+        
+        /* Map Simulation */
+        .tracking-map {
+            height: 220px;
+            background-color: var(--background-green);
+            margin: 0 20px;
+            border-radius: 18px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .map-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .map-roads {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(to right, var(--border-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        .driver-marker {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background-color: var(--primary-green);
+            border-radius: 50%;
+            top: 60%;
+            left: 30%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            box-shadow: 0 4px 12px rgba(0,200,83,0.3);
+            z-index: 2;
+        }
+        
+        .destination-marker {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border: 3px solid var(--primary-green);
+            border-radius: 50%;
+            top: 30%;
+            left: 70%;
+            box-shadow: 0 4px 12px rgba(0,200,83,0.2);
+            z-index: 1;
+        }
+        
+        .eta-display {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background-color: var(--primary-green);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 16px;
+            z-index: 3;
+        }
+        
+        /* Order History */
+        .history-list {
+            padding: 0 18px;
+        }
+        
+        .history-item {
+            background-color: var(--background-green);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s;
+        }
+        
+        .history-item:active {
+            transform: scale(0.99);
+            background-color: #e0f2e1;
+        }
+        
+        .history-details {
+            flex: 1;
+        }
+        
+        .history-date {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .history-gas {
+            font-weight: 800;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+            font-size: 17px;
+        }
+        
+        .history-status {
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background-color: #e0f2e1;
+            color: var(--text-dark);
+            display: inline-block;
+            font-weight: 700;
+        }
+        
+        .history-status.delivered {
+            background-color: var(--primary-green);
+            color: white;
+        }
+        
+        .history-price {
+            font-weight: 800;
+            font-size: 18px;
+            color: var(--primary-green);
+        }
+        
+        /* Profile Screen */
+        .profile-header {
+            padding: 40px 30px 30px;
+            background-color: var(--background-green);
+            border-radius: 0 0 25px 25px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            color: white;
+            margin: 0 auto 20px;
+            font-weight: 800;
+        }
+        
+        .profile-info h2 {
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-size: 24px;
+        }
+        
+        .profile-info p {
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .profile-menu {
+            padding: 0 18px;
+        }
+        
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 22px 0;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .menu-item:active {
+            background-color: var(--background-green);
+            padding-left: 10px;
+            padding-right: 10px;
+            border-radius: 12px;
+        }
+        
+        .menu-item-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        
+        .menu-icon {
+            font-size: 22px;
+            color: var(--primary-green);
+            width: 40px;
+        }
+        
+        .menu-text {
+            font-weight: 800;
+            color: var(--text-dark);
+            font-size: 17px;
+        }
+        
+        .menu-badge {
+            background-color: var(--primary-green);
+            color: white;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+        
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: var(--primary-green);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-weight: 600;
+            z-index: 10000;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,200,83,0.3);
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        /* Animations */
+        @keyframes loading {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+        
+        @keyframes flame {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes moveDriver {
+            0% { top: 60%; left: 30%; }
+            25% { top: 40%; left: 50%; }
+            50% { top: 50%; left: 70%; }
+            75% { top: 35%; left: 80%; }
+            100% { top: 30%; left: 70%; }
+        }
+        
+        /* Order Processing Animation */
+        .processing {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+        }
+        
+        .processing.active {
+            display: flex;
+        }
+        
+        .processing-spinner {
+            width: 80px;
+            height: 80px;
+            border: 5px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-bottom: 30px;
+        }
+        
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        
+        .processing h2 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+        
+        .processing p {
+            color: rgba(255,255,255,0.9);
+            font-size: 16px;
+            max-width: 80%;
+            text-align: center;
+            line-height: 1.5;
+        }
+        
+        /* Real-time Features */
+        .real-time-data {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--background-green);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 20px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .data-item {
+            text-align: center;
+        }
+        
+        .data-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary-green);
+        }
+        
+        .data-label {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+        
+        /* Address Selection Modal */
+        .address-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .address-modal.active {
+            display: flex;
+        }
+        
+        .address-content {
+            background-color: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        
+        .address-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .address-item {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .address-item.active {
+            border-color: var(--primary-green);
+            background-color: var(--background-green);
+        }
+        
+        .address-item:active {
+            transform: scale(0.98);
+        }
+        
+        .address-name {
+            font-weight: 800;
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+        
+        .address-details {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">
+            <i class="fas fa-fire logo-icon"></i>
+            <span>SmartFlame</span>
+        </div>
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
+        </div>
+        <div style="color: rgba(255,255,255,0.8); margin-top: 30px; font-size: 14px;">Loading your gas delivery experience...</div>
+    </div>
+    
+    <!-- Order Processing Screen -->
+    <div class="processing" id="processingScreen">
+        <div class="processing-spinner"></div>
+        <h2>Finding Nearest Driver</h2>
+        <p id="processingStatus">Searching for certified gas delivery drivers in your area...</p>
+        <p id="etaTime" style="margin-top: 20px; font-weight: 600; font-size: 20px;"></p>
+    </div>
+    
+    <!-- Address Selection Modal -->
+    <div class="address-modal" id="addressModal">
+        <div class="address-content">
+            <div class="address-title">Select Delivery Address</div>
+            <div class="address-item active" data-address="home">
+                <div class="address-name">🏠 Home</div>
+                <div class="address-details">123 Main Street, Apt 4B, New York, NY 10001</div>
+            </div>
+            <div class="address-item" data-address="work">
+                <div class="address-name">🏢 Work</div>
+                <div class="address-details">456 Business Ave, Floor 12, New York, NY 10017</div>
+            </div>
+            <div class="address-item" data-address="other">
+                <div class="address-name">📍 Other Location</div>
+                <div class="address-details">789 Park Road, Brooklyn, NY 11215</div>
+            </div>
+            <button class="order-button mt-20" id="confirmAddressBtn">Confirm Address</button>
+        </div>
+    </div>
+    
+    <!-- Main Home Screen -->
+    <div id="homeScreen" class="screen active">
+        <!-- App Header -->
+        <header class="app-header">
+            <div class="header-top">
+                <div class="app-logo">
+                    <div class="logo-icon">🔥</div>
+                    <div>SmartFlame</div>
+                </div>
+                <div class="header-icons">
+                    <i class="fas fa-bell" id="notificationsBtn">
+                        <span class="notification-badge" id="notificationCount">2</span>
+                    </i>
+                    <i class="fas fa-history" id="historyNavBtn"></i>
+                </div>
+            </div>
+            <div class="location-selector" id="locationSelector">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="currentLocation">Delivering to: Home - 123 Main St</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="app-content">
+            <!-- Real-time Data -->
+            <div class="real-time-data">
+                <div class="data-item">
+                    <div class="data-value" id="activeDrivers">24</div>
+                    <div class="data-label">Active Drivers</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-value" id="avgDeliveryTime">28</div>
+                    <div class="data-label">Avg. Delivery (min)</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-value" id="safetyRating">9.8</div>
+                    <div class="data-label">Safety Rating</div>
+                </div>
+            </div>
+            
+            <!-- Promo Banner -->
+            <div class="promo-banner">
+                <div class="promo-decoration">🔥</div>
+                <div class="promo-content">
+                    <div class="promo-title">FIRST ORDER? GET 20% OFF!</div>
+                    <div class="promo-text">Use code: FLAME20 for 20% discount on your first gas delivery</div>
+                    <button class="promo-button" id="applyPromo">APPLY CODE</button>
+                </div>
+            </div>
+            
+            <!-- Gas Selection -->
+            <div class="order-card">
+                <div class="order-card-title">
+                    Select Gas Type
+                    <i class="fas fa-gas-pump"></i>
+                </div>
+                
+                <div class="gas-types">
+                    <div class="gas-type active" data-type="cooking" data-price="24.99">
+                        <div class="gas-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="gas-name">Cooking Gas</div>
+                        <div class="gas-desc">LPG for kitchen & household use</div>
+                        <div class="gas-badge">MOST POPULAR</div>
+                    </div>
+                    
+                    <div class="gas-type" data-type="propane" data-price="29.99">
+                        <div class="gas-icon">
+                            <i class="fas fa-temperature-high"></i>
+                        </div>
+                        <div class="gas-name">Propane</div>
+                        <div class="gas-desc">For heating & outdoor use</div>
+                    </div>
+                    
+                    <div class="gas-type" data-type="industrial" data-price="89.99">
+                        <div class="gas-icon">
+                            <i class="fas fa-industry"></i>
+                        </div>
+                        <div class="gas-name">Industrial</div>
+                        <div class="gas-desc">Commercial & industrial use</div>
+                    </div>
+                    
+                    <div class="gas-type" data-type="oxygen" data-price="39.99">
+                        <div class="gas-icon">
+                            <i class="fas fa-lungs"></i>
+                        </div>
+                        <div class="gas-name">Medical Oxygen</div>
+                        <div class="gas-desc">Medical & therapeutic use</div>
+                        <div class="gas-badge">CERTIFIED</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cylinder Size Selection -->
+            <div class="order-card">
+                <div class="order-card-title">
+                    Select Cylinder Size
+                    <i class="fas fa-weight-hanging"></i>
+                </div>
+                
+                <div class="cylinder-sizes">
+                    <div class="cylinder-size active" data-size="5kg" data-price="24.99">
+                        <div class="cylinder-size-value">5kg</div>
+                        <div class="cylinder-size-label">SMALL</div>
+                        <div class="cylinder-price">$24.99</div>
+                    </div>
+                    
+                    <div class="cylinder-size" data-size="12kg" data-price="39.99">
+                        <div class="cylinder-size-value">12kg</div>
+                        <div class="cylinder-size-label">MEDIUM</div>
+                        <div class="cylinder-price">$39.99</div>
+                    </div>
+                    
+                    <div class="cylinder-size" data-size="45kg" data-price="89.99">
+                        <div class="cylinder-size-value">45kg</div>
+                        <div class="cylinder-size-label">LARGE</div>
+                        <div class="cylinder-price">$89.99</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Delivery Options -->
+            <div class="order-card">
+                <div class="order-card-title">
+                    Delivery Options
+                    <i class="fas fa-shipping-fast"></i>
+                </div>
+                
+                <div class="delivery-options">
+                    <div class="delivery-option active" data-delivery="express" data-fee="4.99">
+                        <div class="delivery-info">
+                            <div class="delivery-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="delivery-text">
+                                <h4>Express Delivery</h4>
+                                <p>Delivery within 30 minutes</p>
+                            </div>
+                        </div>
+                        <div class="delivery-time">$4.99</div>
+                    </div>
+                    
+                    <div class="delivery-option" data-delivery="scheduled" data-fee="2.99">
+                        <div class="delivery-info">
+                            <div class="delivery-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="delivery-text">
+                                <h4>Schedule Delivery</h4>
+                                <p>Choose your preferred time</p>
+                            </div>
+                        </div>
+                        <div class="delivery-time">$2.99</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <div class="summary-title">
+                    Order Summary
+                    <i class="fas fa-receipt"></i>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Gas Type</span>
+                    <span class="summary-value" id="summaryGasType">Cooking Gas</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Cylinder Size</span>
+                    <span class="summary-value" id="summaryCylinder">5kg</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Delivery</span>
+                    <span class="summary-value" id="summaryDelivery">Express</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Delivery Fee</span>
+                    <span class="summary-value" id="summaryFee">$4.99</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Subtotal</span>
+                    <span class="summary-value" id="summarySubtotal">$29.98</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Tax (8%)</span>
+                    <span class="summary-value" id="summaryTax">$2.40</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">TOTAL</span>
+                    <span class="summary-value" id="summaryTotal">$32.38</span>
+                </div>
+            </div>
+            
+            <!-- Order Button -->
+            <button class="order-button" id="placeOrderBtn">
+                <i class="fas fa-bolt"></i>
+                ORDER NOW - <span id="orderTotal">$32.38</span>
+            </button>
+            
+            <!-- Recent Orders -->
+            <h2 class="section-title">
+                Recent Orders
+                <span class="see-all" id="viewAllOrders">View All</span>
+            </h2>
+            
+            <div class="history-item" id="recentOrder1">
+                <div class="history-details">
+                    <div class="history-date">Today, 10:30 AM</div>
+                    <div class="history-gas">12kg Cooking Gas</div>
+                    <div class="history-status delivered">Delivered</div>
+                </div>
+                <div class="history-price">$45.18</div>
+            </div>
+            
+            <div class="history-item" id="recentOrder2">
+                <div class="history-details">
+                    <div class="history-date">Yesterday, 3:15 PM</div>
+                    <div class="history-gas">5kg Propane</div>
+                    <div class="history-status">Cancelled</div>
+                </div>
+                <div class="history-price">$29.38</div>
+            </div>
+        </main>
+        
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active" data-screen="home">
+                <i class="fas fa-home nav-icon"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="nav-item" data-screen="tracking" id="trackNav">
+                <i class="fas fa-map-marker-alt nav-icon"></i>
+                <span>Track</span>
+            </a>
+            <a href="#" class="nav-item" data-screen="orders">
+                <i class="fas fa-history nav-icon"></i>
+                <span>Orders</span>
+            </a>
+            <a href="#" class="nav-item" data-screen="profile">
+                <i class="fas fa-user nav-icon"></i>
+                <span>Profile</span>
+            </a>
+        </nav>
+    </div>
+    
+    <!-- Tracking Screen -->
+    <div id="trackingScreen" class="screen">
+        <div class="screen-header">
+            <div class="screen-title">Track Your Order</div>
+            <div class="close-screen" id="closeTrackingBtn">×</div>
+        </div>
+        
+        <div class="driver-card">
+            <div class="driver-avatar" id="driverInitials">MC</div>
+            <div class="driver-details">
+                <h3 id="driverName">Michael Chen</h3>
+                <p id="driverInfo">SmartFlame Certified Driver • Vehicle: White Ford Transit</p>
+                <div class="driver-rating">⭐ <span id="driverRating">4.8</span> (<span id="deliveryCount">247</span> deliveries)</div>
+            </div>
+            <div class="driver-contact">
+                <div class="contact-btn" id="callDriver">
+                    <i class="fas fa-phone"></i>
+                </div>
+                <div class="contact-btn" id="messageDriver">
+                    <i class="fas fa-comment-alt"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tracking-map">
+            <div class="map-container">
+                <div class="map-roads"></div>
+                <div class="driver-marker" id="driverMarker">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="destination-marker">
+                    <i class="fas fa-home" style="font-size: 10px; color: var(--primary-green);"></i>
+                </div>
+                <div class="eta-display">
+                    <i class="fas fa-clock"></i> ETA: <span id="liveETA">12 min</span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="padding: 20px;">
+            <div class="order-card">
+                <div class="order-card-title">
+                    Order Details
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Order #</span>
+                    <span class="summary-value" id="trackingOrderId">SF-7842-2023</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Gas Type</span>
+                    <span class="summary-value" id="trackingGasType">Cooking Gas (12kg)</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Driver</span>
+                    <span class="summary-value" id="trackingDriverName">Michael Chen</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Status</span>
+                    <span class="summary-value" style="color: var(--primary-green); font-weight: 800;" id="orderStatus">ON THE WAY</span>
+                </div>
+            </div>
+            
+            <button class="order-button mt-20" id="cancelOrderBtn">
+                <i class="fas fa-times"></i>
+                CANCEL ORDER
+            </button>
+        </div>
+    </div>
+    
+    <!-- Orders Screen -->
+    <div id="ordersScreen" class="screen">
+        <div class="screen-header">
+            <div class="screen-title">Order History</div>
+            <div class="close-screen" id="closeOrdersBtn">×</div>
+        </div>
+        
+        <div class="history-list" id="orderHistoryList">
+            <!-- Orders will be loaded here dynamically -->
+        </div>
+    </div>
+    
+    <!-- Profile Screen -->
+    <div id="profileScreen" class="screen">
+        <div class="profile-header">
+            <div class="profile-avatar" id="profileAvatar">AJ</div>
+            <div class="profile-info">
+                <h2 id="profileName">Alex Johnson</h2>
+                <p id="profileEmail">alex.johnson@email.com</p>
+                <p id="profilePhone">+1 (555) 123-4567</p>
+                <div style="margin-top: 15px; color: var(--primary-green); font-weight: 800; font-size: 16px;">
+                    <i class="fas fa-star" style="color: var(--primary-green);"></i> Member since <span id="memberSince">March 2023</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="profile-menu">
+            <div class="menu-item" id="savedAddresses">
+                <div class="menu-item-left">
+                    <div class="menu-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="menu-text">Saved Addresses</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            
+            <div class="menu-item" id="paymentMethods">
+                <div class="menu-item-left">
+                    <div class="menu-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="menu-text">Payment Methods</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            
+            <div class="menu-item" id="notificationsMenu">
+                <div class="menu-item-left">
+                    <div class="menu-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="menu-text">Notifications</div>
+                </div>
+                <div class="menu-badge" id="notificationBadge">2</div>
+            </div>
+            
+            <div class="menu-item" id="safetyMenu">
+                <div class="menu-item-left">
+                    <div class="menu-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="menu-text">Safety & Privacy</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            
+            <div class="menu-item" id="helpMenu">
+                <div class="menu-item-left">
+                    <div class="menu-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <div class="menu-text">Help & Support</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            
+            <div class="menu-item" id="settingsMenu">
+                <div class="menu-item-left">
+                    <div class="menu-icon">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div class="menu-text">Settings</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+        
+        <button class="order-button mt-20" id="logoutBtn" style="background: linear-gradient(135deg, #FF5252, #FF4081); margin: 20px;">
+            <i class="fas fa-sign-out-alt"></i>
+            LOG OUT
+        </button>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">Notification message</div>
+    
+    <script>
+        // Complete App State with Real Data
+        const appState = {
+            user: {
+                name: "Alex Johnson",
+                email: "alex.johnson@email.com",
+                phone: "+1 (555) 123-4567",
+                memberSince: "March 2023",
+                avatarInitials: "AJ"
+            },
+            currentOrder: null,
+            activeOrder: null,
+            selectedGas: "cooking",
+            selectedSize: "5kg",
+            selectedDelivery: "express",
+            promoApplied: false,
+            notifications: 2,
+            deliveryAddress: "home",
+            addresses: {
+                home: {
+                    name: "Home",
+                    address: "123 Main Street, Apt 4B, New York, NY 10001",
+                    short: "123 Main St"
+                },
+                work: {
+                    name: "Work",
+                    address: "456 Business Ave, Floor 12, New York, NY 10017",
+                    short: "456 Business Ave"
+                },
+                other: {
+                    name: "Other Location",
+                    address: "789 Park Road, Brooklyn, NY 11215",
+                    short: "789 Park Road"
+                }
+            },
+            orderHistory: [
+                {
+                    id: "SF-7842-2023",
+                    date: "Today, 10:30 AM",
+                    gas: "12kg Cooking Gas",
+                    status: "delivered",
+                    price: 45.18
+                },
+                {
+                    id: "SF-6391-2023",
+                    date: "Yesterday, 3:15 PM",
+                    gas: "5kg Propane",
+                    status: "cancelled",
+                    price: 29.38
+                },
+                {
+                    id: "SF-5287-2023",
+                    date: "Oct 5, 2023 • 3:15 PM",
+                    gas: "5kg Propane",
+                    status: "delivered",
+                    price: 27.38
+                },
+                {
+                    id: "SF-4196-2023",
+                    date: "Sep 28, 2023 • 11:45 AM",
+                    gas: "45kg Industrial Gas",
+                    status: "delivered",
+                    price: 96.78
+                },
+                {
+                    id: "SF-3921-2023",
+                    date: "Sep 20, 2023 • 2:30 PM",
+                    gas: "12kg Cooking Gas",
+                    status: "delivered",
+                    price: 42.38
+                },
+                {
+                    id: "SF-3654-2023",
+                    date: "Sep 15, 2023 • 4:20 PM",
+                    gas: "5kg Medical Oxygen",
+                    status: "delivered",
+                    price: 44.38
+                }
+            ],
+            drivers: [
+                {
+                    name: "Michael Chen",
+                    initials: "MC",
+                    rating: 4.8,
+                    deliveries: 247,
+                    vehicle: "White Ford Transit",
+                    phone: "+1 (555) 987-6543"
+                },
+                {
+                    name: "Sarah Williams",
+                    initials: "SW",
+                    rating: 4.9,
+                    deliveries: 312,
+                    vehicle: "Blue Toyota Hilux",
+                    phone: "+1 (555) 876-5432"
+                },
+                {
+                    name: "David Rodriguez",
+                    initials: "DR",
+                    rating: 4.7,
+                    deliveries: 189,
+                    vehicle: "Red Nissan Frontier",
+                    phone: "+1 (555) 765-4321"
+                }
+            ],
+            currentDriverIndex: 0,
+            realTimeData: {
+                activeDrivers: 24,
+                avgDeliveryTime: 28,
+                safetyRating: 9.8
+            }
+        };
+        
+        // DOM Elements
+        const loadingScreen = document.getElementById('loadingScreen');
+        const processingScreen = document.getElementById('processingScreen');
+        const addressModal = document.getElementById('addressModal');
+        const homeScreen = document.getElementById('homeScreen');
+        const trackingScreen = document.getElementById('trackingScreen');
+        const ordersScreen = document.getElementById('ordersScreen');
+        const profileScreen = document.getElementById('profileScreen');
+        const toast = document.getElementById('toast');
+        
+        const navItems = document.querySelectorAll('.nav-item');
+        const screens = [homeScreen, trackingScreen, ordersScreen, profileScreen];
+        
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simulate app loading
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    showToast('Welcome to SmartFlame! 🔥 Ready to order gas?');
+                    
+                    // Update real-time data
+                    updateRealTimeData();
+                    
+                    // Initialize order history
+                    renderOrderHistory();
+                    
+                    // Initialize order summary
+                    updateOrderSummary();
+                }, 500);
+            }, 2000);
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Start real-time data updates
+            setInterval(updateRealTimeData, 30000); // Update every 30 seconds
+        });
+        
+        // Update real-time data with realistic changes
+        function updateRealTimeData() {
+            // Simulate realistic fluctuations
+            appState.realTimeData.activeDrivers = Math.max(15, Math.min(35, 
+                appState.realTimeData.activeDrivers + Math.floor(Math.random() * 5) - 2));
+            
+            appState.realTimeData.avgDeliveryTime = Math.max(22, Math.min(35,
+                appState.realTimeData.avgDeliveryTime + Math.floor(Math.random() * 3) - 1));
+            
+            // Update DOM
+            document.getElementById('activeDrivers').textContent = appState.realTimeData.activeDrivers;
+            document.getElementById('avgDeliveryTime').textContent = appState.realTimeData.avgDeliveryTime;
+            document.getElementById('safetyRating').textContent = appState.realTimeData.safetyRating.toFixed(1);
+        }
+        
+        // Render order history
+        function renderOrderHistory() {
+            const historyList = document.getElementById('orderHistoryList');
+            historyList.innerHTML = '';
+            
+            appState.orderHistory.forEach(order => {
+                const orderElement = document.createElement('div');
+                orderElement.className = 'history-item';
+                orderElement.innerHTML = `
+                    <div class="history-details">
+                        <div class="history-date">${order.date}</div>
+                        <div class="history-gas">${order.gas}</div>
+                        <div class="history-status ${order.status}">${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</div>
+                    </div>
+                    <div class="history-price">$${order.price.toFixed(2)}</div>
+                `;
+                historyList.appendChild(orderElement);
+            });
+        }
+        
+        // Event Listeners Setup
+        function setupEventListeners() {
+            // Navigation
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetScreen = this.getAttribute('data-screen');
+                    navigateTo(targetScreen);
+                });
+            });
+            
+            // Gas type selection
+            document.querySelectorAll('.gas-type').forEach(type => {
+                type.addEventListener('click', function() {
+                    document.querySelectorAll('.gas-type').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    appState.selectedGas = this.getAttribute('data-type');
+                    updateOrderSummary();
+                });
+            });
+            
+            // Cylinder size selection
+            document.querySelectorAll('.cylinder-size').forEach(size => {
+                size.addEventListener('click', function() {
+                    document.querySelectorAll('.cylinder-size').forEach(s => s.classList.remove('active'));
+                    this.classList.add('active');
+                    appState.selectedSize = this.getAttribute('data-size');
+                    updateOrderSummary();
+                });
+            });
+            
+            // Delivery option selection
+            document.querySelectorAll('.delivery-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.delivery-option').forEach(o => o.classList.remove('active'));
+                    this.classList.add('active');
+                    appState.selectedDelivery = this.getAttribute('data-delivery');
+                    updateOrderSummary();
+                });
+            });
+            
+            // Order button
+            document.getElementById('placeOrderBtn').addEventListener('click', placeOrder);
+            
+            // Apply promo button
+            document.getElementById('applyPromo').addEventListener('click', applyPromoCode);
+            
+            // View all orders
+            document.getElementById('viewAllOrders').addEventListener('click', function() {
+                navigateTo('orders');
+            });
+            
+            // History button in header
+            document.getElementById('historyNavBtn').addEventListener('click', function() {
+                navigateTo('orders');
+            });
+            
+            // Notifications button
+            document.getElementById('notificationsBtn').addEventListener('click', function() {
+                showToast(`You have ${appState.notifications} new notifications`);
+                appState.notifications = 0;
+                document.getElementById('notificationCount').textContent = '0';
+                document.getElementById('notificationBadge').textContent = '0';
+            });
+            
+            // Location selector
+            document.getElementById('locationSelector').addEventListener('click', function() {
+                addressModal.classList.add('active');
+                // Set active address
+                document.querySelectorAll('.address-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('data-address') === appState.deliveryAddress) {
+                        item.classList.add('active');
+                    }
+                });
+            });
+            
+            // Address selection
+            document.querySelectorAll('.address-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.address-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Confirm address button
+            document.getElementById('confirmAddressBtn').addEventListener('click', function() {
+                const selectedAddress = document.querySelector('.address-item.active').getAttribute('data-address');
+                appState.deliveryAddress = selectedAddress;
+                
+                const address = appState.addresses[selectedAddress];
+                document.getElementById('currentLocation').textContent = `Delivering to: ${address.name} - ${address.short}`;
+                
+                addressModal.classList.remove('active');
+                showToast(`Delivery address updated to ${address.name}`);
+                
+                // Update delivery time based on address
+                updateDeliveryTime();
+            });
+            
+            // Close buttons
+            document.getElementById('closeTrackingBtn').addEventListener('click', function() {
+                navigateTo('home');
+            });
+            
+            document.getElementById('closeOrdersBtn').addEventListener('click', function() {
+                navigateTo('home');
+            });
+            
+            // Driver contact buttons
+            document.getElementById('callDriver').addEventListener('click', function() {
+                if (appState.activeOrder && appState.activeOrder.driver) {
+                    showToast(`Calling driver ${appState.activeOrder.driver.name}...`);
+                    // In a real app, this would initiate a phone call
+                }
+            });
+            
+            document.getElementById('messageDriver').addEventListener('click', function() {
+                if (appState.activeOrder && appState.activeOrder.driver) {
+                    showToast(`Opening message screen for ${appState.activeOrder.driver.name}...`);
+                }
+            });
+            
+            // Cancel order button
+            document.getElementById('cancelOrderBtn').addEventListener('click', function() {
+                if (confirm('Are you sure you want to cancel this order? A $5 cancellation fee may apply.')) {
+                    showToast('Order cancelled. Refund will be processed within 3-5 business days.');
+                    
+                    // Add to history as cancelled
+                    appState.orderHistory.unshift({
+                        id: appState.activeOrder.id,
+                        date: 'Just now',
+                        gas: `${appState.activeOrder.cylinderSize} ${appState.activeOrder.gasType}`,
+                        status: 'cancelled',
+                        price: parseFloat(appState.activeOrder.total.replace('$', ''))
+                    });
+                    
+                    renderOrderHistory();
+                    navigateTo('home');
+                }
+            });
+            
+            // Profile menu items
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const id = this.id;
+                    showToast(`Opening ${id.replace(/([A-Z])/g, ' $1').toLowerCase()}...`);
+                });
+            });
+            
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                if (confirm('Are you sure you want to log out?')) {
+                    showToast('Logging out...');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
+            });
+        }
+        
+        // Navigation function
+        function navigateTo(screenName) {
+            // Update navigation
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-screen') === screenName) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Hide all screens
+            screens.forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show target screen
+            let targetScreen;
+            switch(screenName) {
+                case 'home':
+                    targetScreen = homeScreen;
+                    break;
+                case 'tracking':
+                    targetScreen = trackingScreen;
+                    if (appState.activeOrder) {
+                        updateTrackingScreen();
+                    }
+                    break;
+                case 'orders':
+                    targetScreen = ordersScreen;
+                    renderOrderHistory();
+                    break;
+                case 'profile':
+                    targetScreen = profileScreen;
+                    updateProfileScreen();
+                    break;
+                default:
+                    targetScreen = homeScreen;
+            }
+            
+            targetScreen.classList.add('active');
+        }
+        
+        // Update delivery time based on address
+        function updateDeliveryTime() {
+            const deliveryOptions = document.querySelectorAll('.delivery-option');
+            const expressOption = deliveryOptions[0];
+            const scheduledOption = deliveryOptions[1];
+            
+            let expressTime = 30;
+            let scheduledFee = 2.99;
+            
+            // Adjust times based on address
+            switch(appState.deliveryAddress) {
+                case 'work':
+                    expressTime = 25; // Downtown is faster
+                    scheduledFee = 3.99;
+                    break;
+                case 'other':
+                    expressTime = 35; // Suburbs take longer
+                    scheduledFee = 1.99;
+                    break;
+            }
+            
+            // Update UI
+            expressOption.querySelector('p').textContent = `Delivery within ${expressTime} minutes`;
+            scheduledOption.querySelector('.delivery-time').textContent = `$${scheduledFee.toFixed(2)}`;
+            scheduledOption.setAttribute('data-fee', scheduledFee.toFixed(2));
+            
+            updateOrderSummary();
+        }
+        
+        // Update order summary
+        function updateOrderSummary() {
+            // Get selected values
+            const activeGas = document.querySelector('.gas-type.active');
+            const activeSize = document.querySelector('.cylinder-size.active');
+            const activeDelivery = document.querySelector('.delivery-option.active');
+            
+            // Extract data
+            const gasType = activeGas ? activeGas.querySelector('.gas-name').textContent : 'Cooking Gas';
+            const cylinderSize = activeSize ? activeSize.getAttribute('data-size') : '5kg';
+            const deliveryType = activeDelivery ? activeDelivery.querySelector('h4').textContent : 'Express Delivery';
+            const deliveryFee = activeDelivery ? parseFloat(activeDelivery.getAttribute('data-fee')) : 4.99;
+            const cylinderPrice = activeSize ? parseFloat(activeSize.getAttribute('data-price')) : 24.99;
+            
+            // Calculate totals
+            const subtotal = cylinderPrice + deliveryFee;
+            const tax = subtotal * 0.08;
+            const total = subtotal + tax;
+            
+            // Apply promo discount if active
+            let discount = 0;
+            if (appState.promoApplied) {
+                discount = total * 0.2; // 20% discount
+            }
+            const finalTotal = total - discount;
+            
+            // Update UI
+            document.getElementById('summaryGasType').textContent = gasType;
+            document.getElementById('summaryCylinder').textContent = cylinderSize;
+            document.getElementById('summaryDelivery').textContent = deliveryType;
+            document.getElementById('summaryFee').textContent = '$' + deliveryFee.toFixed(2);
+            document.getElementById('summarySubtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('summaryTax').textContent = '$' + tax.toFixed(2);
+            
+            if (appState.promoApplied) {
+                document.getElementById('summaryTotal').innerHTML = 
+                    '<span style="text-decoration: line-through; color: #999; margin-right: 8px;">$' + total.toFixed(2) + '</span> $' + finalTotal.toFixed(2);
+                document.getElementById('orderTotal').innerHTML = 
+                    '<span style="text-decoration: line-through; margin-right: 5px;">$' + total.toFixed(2) + '</span> $' + finalTotal.toFixed(2);
+            } else {
+                document.getElementById('summaryTotal').textContent = '$' + total.toFixed(2);
+                document.getElementById('orderTotal').textContent = '$' + total.toFixed(2);
+            }
+        }
+        
+        // Apply promo code
+        function applyPromoCode() {
+            if (!appState.promoApplied) {
+                appState.promoApplied = true;
+                document.getElementById('applyPromo').textContent = '20% OFF APPLIED!';
+                document.getElementById('applyPromo').style.backgroundColor = 'white';
+                document.getElementById('applyPromo').style.color = 'var(--primary-green)';
+                updateOrderSummary();
+                showToast('Promo code FLAME20 applied! 20% discount added.');
+            } else {
+                showToast('Promo code already applied!');
+            }
+        }
+        
+        // Place order
+        function placeOrder() {
+            const orderBtn = document.getElementById('placeOrderBtn');
+            
+            // Show processing screen
+            processingScreen.classList.add('active');
+            
+            // Select a random driver
+            appState.currentDriverIndex = Math.floor(Math.random() * appState.drivers.length);
+            const driver = appState.drivers[appState.currentDriverIndex];
+            
+            // Get order details
+            const gasType = document.querySelector('.gas-type.active .gas-name').textContent;
+            const cylinderSize = document.querySelector('.cylinder-size.active').getAttribute('data-size');
+            const deliveryType = document.querySelector('.delivery-option.active h4').textContent;
+            const total = document.getElementById('orderTotal').textContent;
+            
+            // Calculate ETA based on address and time of day
+            let baseETA = 25;
+            const hour = new Date().getHours();
+            if (hour >= 7 && hour <= 9) baseETA += 10; // Morning rush
+            if (hour >= 17 && hour <= 19) baseETA += 15; // Evening rush
+            
+            let eta = baseETA;
+            
+            // Update processing status
+            const processingStatus = document.getElementById('processingStatus');
+            const etaTime = document.getElementById('etaTime');
+            
+            let processingStep = 0;
+            const processingInterval = setInterval(() => {
+                processingStep++;
+                
+                switch(processingStep) {
+                    case 1:
+                        processingStatus.textContent = 'Verifying your order details...';
+                        break;
+                    case 2:
+                        processingStatus.textContent = 'Processing payment...';
+                        break;
+                    case 3:
+                        processingStatus.textContent = 'Finding nearest driver...';
+                        break;
+                    case 4:
+                        processingStatus.textContent = `Driver ${driver.name} assigned!`;
+                        eta = Math.max(15, eta - 10);
+                        break;
+                    case 5:
+                        processingStatus.textContent = 'Driver is on the way to pick up your order...';
+                        eta = Math.max(12, eta - 3);
+                        break;
+                }
+                
+                etaTime.textContent = `Estimated arrival: ${eta} minutes`;
+                
+                if (processingStep >= 5) {
+                    clearInterval(processingInterval);
+                    
+                    // Hide processing screen
+                    setTimeout(() => {
+                        processingScreen.classList.remove('active');
+                        
+                        // Create order object
+                        appState.activeOrder = {
+                            id: 'SF-' + Math.floor(1000 + Math.random() * 9000) + '-2023',
+                            gasType: gasType,
+                            cylinderSize: cylinderSize,
+                            deliveryType: deliveryType,
+                            total: total,
+                            driver: driver,
+                            eta: eta
+                        };
+                        
+                        // Add to history
+                        appState.orderHistory.unshift({
+                            id: appState.activeOrder.id,
+                            date: 'Just now',
+                            gas: `${cylinderSize} ${gasType}`,
+                            status: 'processing',
+                            price: parseFloat(total.replace('$', ''))
+                        });
+                        
+                        renderOrderHistory();
+                        
+                        // Show success message
+                        showToast('🎉 Order confirmed! Driver is on the way.');
+                        
+                        // Navigate to tracking
+                        setTimeout(() => {
+                            navigateTo('tracking');
+                            
+                            // Start live tracking
+                            startLiveTracking();
+                        }, 1000);
+                    }, 2000);
+                }
+            }, 1500); // Update every 1.5 seconds
+        }
+        
+        // Update tracking screen
+        function updateTrackingScreen() {
+            if (!appState.activeOrder) return;
+            
+            const driver = appState.activeOrder.driver;
+            document.getElementById('driverInitials').textContent = driver.initials;
+            document.getElementById('driverName').textContent = driver.name;
+            document.getElementById('driverInfo').textContent = `SmartFlame Certified Driver • Vehicle: ${driver.vehicle}`;
+            document.getElementById('driverRating').textContent = driver.rating;
+            document.getElementById('deliveryCount').textContent = driver.deliveries;
+            
+            document.getElementById('trackingOrderId').textContent = appState.activeOrder.id;
+            document.getElementById('trackingGasType').textContent = `${appState.activeOrder.cylinderSize} ${appState.activeOrder.gasType}`;
+            document.getElementById('trackingDriverName').textContent = driver.name;
+            
+            document.getElementById('liveETA').textContent = `${appState.activeOrder.eta} min`;
+        }
+        
+        // Start live tracking
+        function startLiveTracking() {
+            if (!appState.activeOrder) return;
+            
+            let eta = appState.activeOrder.eta;
+            const driverMarker = document.getElementById('driverMarker');
+            const liveETA = document.getElementById('liveETA');
+            const orderStatus = document.getElementById('orderStatus');
+            
+            // Reset marker position
+            driverMarker.style.top = '60%';
+            driverMarker.style.left = '30%';
+            
+            const trackingInterval = setInterval(() => {
+                eta--;
+                
+                if (eta <= 0) {
+                    clearInterval(trackingInterval);
+                    liveETA.textContent = 'ARRIVED';
+                    orderStatus.textContent = 'DELIVERED';
+                    
+                    // Update driver marker position
+                    driverMarker.style.top = '30%';
+                    driverMarker.style.left = '70%';
+                    
+                    // Show delivery complete message
+                    setTimeout(() => {
+                        showToast('✅ Driver has arrived! Your gas is being delivered.');
+                        
+                        // Update order status in history
+                        const orderIndex = appState.orderHistory.findIndex(o => o.id === appState.activeOrder.id);
+                        if (orderIndex !== -1) {
+                            appState.orderHistory[orderIndex].status = 'delivered';
+                            renderOrderHistory();
+                        }
+                    }, 1000);
+                } else {
+                    liveETA.textContent = eta + ' min';
+                    
+                    // Simulate driver movement
+                    const currentTop = parseFloat(driverMarker.style.top);
+                    const currentLeft = parseFloat(driverMarker.style.left);
+                    
+                    driverMarker.style.top = (currentTop - 0.5) + '%';
+                    driverMarker.style.left = (currentLeft + 1.5) + '%';
+                    
+                    // Update status based on progress
+                    if (eta <= 5) {
+                        orderStatus.textContent = 'ALMOST THERE';
+                    } else if (eta <= 10) {
+                        orderStatus.textContent = 'NEARBY';
+                    }
+                }
+            }, 3000); // Update every 3 seconds
+        }
+        
+        // Update profile screen
+        function updateProfileScreen() {
+            document.getElementById('profileAvatar').textContent = appState.user.avatarInitials;
+            document.getElementById('profileName').textContent = appState.user.name;
+            document.getElementById('profileEmail').textContent = appState.user.email;
+            document.getElementById('profilePhone').textContent = appState.user.phone;
+            document.getElementById('memberSince').textContent = appState.user.memberSince;
+        }
+        
+        // Show toast notification
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
